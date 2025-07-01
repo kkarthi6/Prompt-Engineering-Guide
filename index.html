@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Guide to Prompt Engineering</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: A thematic, dashboard-style Single Page Application (SPA) is used instead of a linear document structure. This facilitates non-linear exploration and learning. The application is divided into logical sections: a high-impact introduction, interactive explorers for core principles, prompting techniques, and output controls, a "do's and don'ts" section for pitfalls, and dashboards for ethics and evaluation metrics. This structure is chosen for maximum user engagement and usability, allowing users to compare concepts side-by-side and interact with data directly, which is more effective for learning and retention than passive reading. -->
+    <!-- Visualization & Content Choices: The application uses a mix of presentation methods to match the content's goal. High-impact stats are shown as large animated numbers (Inform). An interactive module with buttons and dynamic text replaces static tables for comparing prompting techniques (Compare). A slider demonstrates the 'temperature' parameter's effect (Change). Interactive cards are used for pitfalls (Organize). A dynamic Chart.js bar chart visualizes evaluation metrics, controlled by a dropdown (Compare/Inform). Simple flow diagrams for concepts like CoT are built with structured HTML/CSS (Organize). This multi-faceted approach ensures information is presented in its most intuitive form, confirming NO SVG/Mermaid is used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F4F1;
+            color: #444444;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #D4A373;
+            border-bottom-color: #D4A373;
+        }
+        .stat-card, .principle-card, .pitfall-card, .technique-card, .control-card {
+            background-color: white;
+            border: 1px solid #CCC5BF;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:hover, .principle-card:hover, .pitfall-card:hover, .technique-card:hover, .control-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .btn-primary {
+            background-color: #A69C96;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #8a7f79;
+        }
+        .btn-secondary {
+            background-color: #e5e0dc;
+            color: #444444;
+            transition: background-color 0.3s ease;
+        }
+        .btn-secondary.active {
+            background-color: #D4A373;
+            color: white;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .sticky-nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background-color: rgba(248, 244, 241, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        .ai-output-area {
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header id="header" class="sticky-nav shadow-sm">
+        <nav class="container mx-auto px-6 py-3">
+            <div class="flex items-center justify-between">
+                <div class="text-2xl font-bold text-gray-800">Prompt Engineering</div>
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="#principles" class="nav-link px-2 py-1">Principles</a>
+                    <a href="#toolkit" class="nav-link px-2 py-1">Toolkit</a>
+                    <a href="#control" class="nav-link px-2 py-1">Control</a>
+                    <a href="#pitfalls" class="nav-link px-2 py-1">Pitfalls</a>
+                    <a href="#ethics" class="nav-link px-2 py-1">Ethics</a>
+                    <a href="#evaluation" class="nav-link px-2 py-1">Evaluation</a>
+                    <a href="#applications" class="nav-link px-2 py-1">Applications</a>
+                </div>
+                 <div class="md:hidden">
+                    <select id="mobile-nav" class="bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#D4A373]">
+                        <option value="#header">Home</option>
+                        <option value="#principles">Principles</option>
+                        <option value="#toolkit">Toolkit</option>
+                        <option value="#control">Control</option>
+                        <option value="#pitfalls">Pitfalls</option>
+                        <option value="#ethics">Ethics</option>
+                        <option value="#evaluation">Evaluation</option>
+                        <option value="#applications">Applications</option>
+                    </select>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-8">
+
+        <!-- Hero Section -->
+        <section id="hero" class="text-center py-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4 text-[#444444]">The Art & Science of Prompt Engineering</h1>
+            <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-8">An interactive guide to mastering the craft of instructing AI. Learn to design effective prompts that unlock the full potential of Large Language Models (LLMs), transforming simple inputs into powerful, precise, and reliable outputs.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                <div class="stat-card p-6 rounded-lg shadow-md">
+                    <div class="text-4xl font-bold text-[#D4A373]" data-target="73">0</div>
+                    <p class="text-gray-600 mt-2">Reduction in Content Production Time</p>
+                </div>
+                <div class="stat-card p-6 rounded-lg shadow-md">
+                    <div class="text-4xl font-bold text-[#D4A373]" data-target="91">0</div>
+                    <p class="text-gray-600 mt-2">Increase in Decision Support Reliability</p>
+                </div>
+                <div class="stat-card p-6 rounded-lg shadow-md">
+                    <div class="text-4xl font-bold text-[#D4A373]" data-target="84">0</div>
+                    <p class="text-gray-600 mt-2">Improvement in First-Contact Resolution</p>
+                </div>
+            </div>
+             <p class="text-xs text-gray-400 mt-4 max-w-4xl mx-auto">Metrics sourced from industry reports on prompt engineering adoption.</p>
+
+            <div class="mt-12 p-8 bg-white rounded-lg shadow-md max-w-2xl mx-auto">
+                <h3 class="text-2xl font-bold mb-4 text-[#444444]">Generate a Prompt Idea ✨</h3>
+                <p class="text-gray-600 mb-4">Enter a topic, and I'll suggest a creative prompt for you.</p>
+                <input type="text" id="prompt-idea-input" placeholder="e.g., 'sustainable energy', 'sci-fi story', 'healthy recipes'" class="w-full p-3 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-[#D4A373]">
+                <button id="generate-prompt-idea-btn" class="btn-primary px-6 py-3 rounded-full text-lg font-semibold">Generate Prompt Idea ✨</button>
+                <div id="prompt-idea-loading" class="hidden text-center mt-4">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D4A373] mx-auto"></div>
+                    <p class="text-gray-500 mt-2">Generating...</p>
+                </div>
+                <div id="prompt-idea-output" class="mt-6 p-4 bg-gray-100 rounded-md text-left ai-output-area"></div>
+            </div>
+        </section>
+
+        <!-- Core Principles -->
+        <section id="principles" class="py-16">
+            <h2 class="text-3xl font-bold text-center mb-2">Core Principles of Effective Design</h2>
+            <p class="text-center text-gray-600 max-w-2xl mx-auto mb-12">Every powerful prompt is built on a foundation of three key principles. Mastering these concepts is the first step toward guiding AI effectively and predictably.</p>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="principle-card p-6 rounded-lg text-center">
+                    <div class="text-4xl mb-4">🎯</div>
+                    <h3 class="text-xl font-semibold mb-2">Clarity & Specificity</h3>
+                    <p class="text-gray-600">Ambiguity is the enemy. Use precise language, action verbs, and define your desired format, length, and audience. Don't make the AI guess.</p>
+                </div>
+                <div class="principle-card p-6 rounded-lg text-center">
+                    <div class="text-4xl mb-4">📚</div>
+                    <h3 class="text-xl font-semibold mb-2">Contextual Framing</h3>
+                    <p class="text-gray-600">AI has no memory of your situation. Provide necessary background, data, sources, or even assign the AI a role to improve relevance and accuracy.</p>
+                </div>
+                <div class="principle-card p-6 rounded-lg text-center">
+                    <div class="text-4xl mb-4">🔄</div>
+                    <h3 class="text-xl font-semibold mb-2">Iterative Refinement</h3>
+                    <p class="text-gray-600">The first prompt is rarely perfect. Treat it as a conversation. Analyze the output, then refine your prompt by adding constraints or rephrasing.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- The Prompting Toolkit -->
+        <section id="toolkit" class="py-16 bg-white rounded-xl shadow-lg">
+            <h2 class="text-3xl font-bold text-center mb-2">The Prompting Toolkit</h2>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-12">Different tasks require different tools. Select a prompting technique below to explore how it works, when to use it, and see a practical example. This interactive comparison helps you choose the right approach for your needs.</p>
+            <div class="flex justify-center flex-wrap gap-2 md:gap-4 mb-8 px-4" id="technique-buttons">
+                <button class="btn-secondary px-4 py-2 rounded-full text-sm font-medium" data-technique="zero-shot">Zero-Shot</button>
+                <button class="btn-secondary px-4 py-2 rounded-full text-sm font-medium" data-technique="one-shot">One-Shot</button>
+                <button class="btn-secondary px-4 py-2 rounded-full text-sm font-medium" data-technique="few-shot">Few-Shot</button>
+                <button class="btn-secondary px-4 py-2 rounded-full text-sm font-medium" data-technique="cot">Chain-of-Thought</button>
+                <button class="btn-secondary px-4 py-2 rounded-full text-sm font-medium" data-technique="role-playing">Role-Playing</button>
+            </div>
+            <div id="technique-display" class="technique-card max-w-4xl mx-auto p-8 rounded-lg min-h-[300px] transition-all duration-300">
+                <!-- Technique details will be loaded here by JS -->
+            </div>
+
+            <div class="mt-8 p-8 bg-gray-50 rounded-lg shadow-inner max-w-4xl mx-auto">
+                <h3 class="text-2xl font-bold mb-4 text-[#444444]">Try it with AI ✨</h3>
+                <p class="text-gray-600 mb-4">Enter some text below, and see how the currently selected prompting technique influences the AI's output.</p>
+                <textarea id="ai-input-text" class="w-full p-3 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-[#D4A373]" rows="4" placeholder="Enter text for the AI to process (e.g., 'The quick brown fox jumps over the lazy dog.')."></textarea>
+                <button id="generate-ai-output-btn" class="btn-primary px-6 py-3 rounded-full text-lg font-semibold">Generate AI Output ✨</button>
+                <div id="ai-output-loading" class="hidden text-center mt-4">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D4A373] mx-auto"></div>
+                    <p class="text-gray-500 mt-2">Generating...</p>
+                </div>
+                <div id="ai-output-display" class="mt-6 p-4 bg-gray-100 rounded-md text-left ai-output-area"></div>
+            </div>
+        </section>
+
+        <!-- Mastering Control -->
+        <section id="control" class="py-16">
+             <h2 class="text-3xl font-bold text-center mb-2">Mastering AI Output</h2>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-12">Beyond the words you use, you can control an AI's output through structural commands and model parameters. This section provides interactive tools to understand how to manage format, style, and creativity.</p>
+            <div class="grid lg:grid-cols-2 gap-8 items-start">
+                <div class="control-card p-8 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-4">Parameter Control: Temperature</h3>
+                    <p class="text-gray-600 mb-4">Temperature controls the randomness of the AI's output. Low temperatures produce focused, deterministic results, while high temperatures encourage creativity and diversity. Adjust the slider to see how it works.</p>
+                    <input type="range" min="0" max="1" value="0.7" step="0.1" id="temp-slider" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <div class="flex justify-between text-xs text-gray-500 mt-2">
+                        <span>Deterministic & Focused</span>
+                        <span>Creative & Random</span>
+                    </div>
+                    <div id="temp-explanation" class="mt-6 p-4 bg-[#F8F4F1] rounded-md">
+                    </div>
+                </div>
+                 <div class="control-card p-8 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-4">Structural Control: Output Formatting</h3>
+                    <p class="text-gray-600 mb-6">You can instruct the AI to return its response in a specific format like JSON or Markdown. This is crucial for consistency and for using AI outputs in other programs.</p>
+                    <p class="font-semibold mb-2">Example Prompt:</p>
+                    <code class="block text-sm bg-gray-100 p-4 rounded-md text-gray-800">
+                        Extract the name and capital from the following text and provide the output in JSON format.<br><br>
+                        Text: "France, a country in Western Europe, has Paris as its capital."<br><br>
+                        Provide the response in JSON format: {"country": "", "capital": ""}
+                    </code>
+                     <p class="font-semibold mt-6 mb-2">Expected AI Output:</p>
+                    <code class="block text-sm bg-gray-100 p-4 rounded-md text-green-700">
+                       {"country": "France", "capital": "Paris"}
+                    </code>
+                </div>
+            </div>
+        </section>
+
+        <!-- Common Pitfalls -->
+        <section id="pitfalls" class="py-16 bg-white rounded-xl shadow-lg">
+            <h2 class="text-3xl font-bold text-center mb-2">Common Pitfalls & How to Avoid Them</h2>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-12">Even experienced users make mistakes. Recognizing these common anti-patterns is key to writing effective prompts consistently. Click on a pitfall to reveal the solution and a corrected example.</p>
+            <div id="pitfalls-container" class="space-y-4 max-w-4xl mx-auto">
+                <!-- Pitfalls will be injected here by JS -->
+            </div>
+        </section>
+
+        <!-- Ethics & Safety -->
+        <section id="ethics" class="py-16">
+            <h2 class="text-3xl font-bold text-center mb-2">Ethics & Safety in Prompting</h2>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-12">With great power comes great responsibility. Responsible prompt engineering requires a proactive approach to safety, fairness, and transparency to mitigate risks and build trustworthy AI systems.</p>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center p-6">
+                     <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-[#e5e0dc] text-3xl mb-4">🛡️</div>
+                    <h3 class="text-xl font-semibold mb-2">Mitigating Bias</h3>
+                    <p class="text-gray-600">Actively design prompts to be neutral. Incorporate diverse examples and explicitly instruct the AI to avoid stereotypes to ensure fair and balanced outputs.</p>
+                </div>
+                <div class="text-center p-6">
+                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-[#e5e0dc] text-3xl mb-4">🔍</div>
+                    <h3 class="text-xl font-semibold mb-2">Ensuring Transparency</h3>
+                    <p class="text-gray-600">Build trust by designing prompts that encourage accountability. Ask the AI to cite sources for factual claims or explain its reasoning step-by-step.</p>
+                </div>
+                <div class="text-center p-6">
+                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-[#e5e0dc] text-3xl mb-4">🚨</div>
+                    <h3 class="text-xl font-semibold mb-2">Preventing Misuse</h3>
+                    <p class="text-gray-600">Guard against "prompt injection" attacks by separating system instructions from user input and implementing filters to block malicious instructions.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Evaluating Effectiveness -->
+        <section id="evaluation" class="py-16 bg-white rounded-xl shadow-lg">
+             <h2 class="text-3xl font-bold text-center mb-2">Evaluating Prompt Effectiveness</h2>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-12">How do you know if a prompt is good? Evaluation is a continuous process that relies on a combination of metrics. Select a metric from the dropdown to visualize its target and learn more.</p>
+            <div class="max-w-4xl mx-auto">
+                <div class="flex justify-center mb-8">
+                    <select id="metric-selector" class="bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#D4A373]">
+                    </select>
+                </div>
+                <div class="grid lg:grid-cols-2 gap-8 items-center">
+                    <div class="chart-container">
+                        <canvas id="metricsChart"></canvas>
+                    </div>
+                    <div id="metric-explanation" class="p-6 rounded-lg bg-gray-50 min-h-[200px]">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Applications -->
+        <section id="applications" class="py-16">
+            <h2 class="text-3xl font-bold text-center mb-2">Practical Applications</h2>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-12">Prompt engineering is not just theoretical; it drives tangible value across industries. Explore some of the key use cases where this skill is revolutionizing work.</p>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                <div class="principle-card p-6 rounded-lg text-center aspect-square flex flex-col justify-center">
+                    <div class="text-3xl mb-3">📝</div><h3 class="font-semibold">Content Creation</h3>
+                </div>
+                <div class="principle-card p-6 rounded-lg text-center aspect-square flex flex-col justify-center">
+                    <div class="text-3xl mb-3">📊</div><h3 class="font-semibold">Data Analysis</h3>
+                </div>
+                 <div class="principle-card p-6 rounded-lg text-center aspect-square flex flex-col justify-center">
+                    <div class="text-3xl mb-3">💻</div><h3 class="font-semibold">Code Generation</h3>
+                </div>
+                <div class="principle-card p-6 rounded-lg text-center aspect-square flex flex-col justify-center">
+                    <div class="text-3xl mb-3">💬</div><h3 class="font-semibold">Customer Service</h3>
+                </div>
+                <div class="principle-card p-6 rounded-lg text-center aspect-square flex flex-col justify-center">
+                    <div class="text-3xl mb-3">⚕️</div><h3 class="font-semibold">Healthcare</h3>
+                </div>
+                <div class="principle-card p-6 rounded-lg text-center aspect-square flex flex-col justify-center">
+                    <div class="text-3xl mb-3">⚖️</div><h3 class="font-semibold">Legal & Compliance</h3>
+                </div>
+                 <div class="principle-card p-6 rounded-lg text-center aspect-square flex flex-col justify-center">
+                    <div class="text-3xl mb-3">🛒</div><h3 class="font-semibold">E-commerce</h3>
+                </div>
+                 <div class="principle-card p-6 rounded-lg text-center aspect-square flex flex-col justify-center">
+                    <div class="text-3xl mb-3">🏭</div><h3 class="font-semibold">Manufacturing</h3>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-16">
+        <div class="container mx-auto px-6 py-4 text-center text-gray-500">
+            <p>&copy; 2025 Interactive Guide to Prompt Engineering. All rights reserved.</p>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const techniquesData = {
+        'zero-shot': {
+            title: 'Zero-Shot Prompting',
+            description: 'This is the simplest form. You provide a direct instruction to the AI without any examples. The model relies entirely on its pre-trained knowledge to generate a response.',
+            useCase: 'Best for simple, well-defined tasks like general questions, basic summarization, or simple classification where the model likely has strong prior knowledge.',
+            limitations: 'Often fails on complex or nuanced tasks because it lacks specific guidance. Can be unpredictable.',
+            example: 'Prompt: "Classify the sentiment of the following text as positive, negative, or neutral. Text: The movie was surprisingly good!"',
+            aiPromptTemplate: (text) => `Please provide a concise summary of the following text: "${text}"`
+        },
+        'one-shot': {
+            title: 'One-Shot Prompting',
+            description: 'You provide a single example of the desired input-output format along with your instruction. This one example helps "steer" the model toward the correct behavior.',
+            useCase: 'Good for tasks that need a specific output format or a bit more guidance than zero-shot. Useful for establishing a pattern.',
+            limitations: 'One example might not be enough to cover all nuances of a complex task.',
+            example: 'Prompt: "Translate English to French.\n\nsea otter => loutre de mer\ncheese =>"',
+            aiPromptTemplate: (text) => `Given an example of a word and its synonym, provide a synonym for the given word. Example:\nHappy: Joyful\n${text}:`
+        },
+        'few-shot': {
+            title: 'Few-Shot Prompting',
+            description: 'You provide two or more examples of the desired input-output behavior. This allows the model to learn the pattern (known as "in-context learning") more effectively.',
+            useCase: 'Ideal for complex tasks requiring pattern replication, precise formatting, or nuanced classification. The more examples, the better the performance (up to the context limit).',
+            limitations: 'Can consume a lot of token space. Examples must be consistent and high-quality.',
+            example: 'Prompt: "A \'whatpu\' is a small, furry animal native to Tanzania. An example of a sentence that uses the word whatpu is:\nWe were traveling in Africa and we saw these very cute whatpus.\n\nTo \'farduddle\' means to jump up and down enthusiastically. An example of a sentence that uses the word farduddle is:"',
+            aiPromptTemplate: (text) => `Identify the primary emotion conveyed in the following sentences, providing examples as shown:\n\nSentence: I feel so happy today! Emotion: Joy\nSentence: This is incredibly frustrating. Emotion: Anger\nSentence: ${text}. Emotion:`
+        },
+        'cot': {
+            title: 'Chain-of-Thought (CoT) Prompting',
+            description: 'You guide the AI to break down a complex problem into a series of intermediate reasoning steps before giving the final answer. This dramatically improves performance on logic and math problems.',
+            useCase: 'Essential for arithmetic, commonsense, and symbolic reasoning tasks. Simply adding "Let\'s think step by step" can trigger this behavior.',
+            limitations: 'Tends to emerge only in very large models (>100B parameters). Can increase output length.',
+            example: 'Prompt: "Q: The cafeteria had 23 apples. If they used 20 to make lunch and bought 6 more, how many apples do they have?\nA: Let\'s think step by step. First, they had 23 apples. They used 20, so 23 - 20 = 3. Then they bought 6 more, so 3 + 6 = 9. The answer is 9."',
+            aiPromptTemplate: (text) => `Analyze the following scenario step-by-step and provide a logical conclusion: "${text}"`
+        },
+        'role-playing': {
+            title: 'Role-Playing Prompting',
+            description: 'You assign a specific persona or character to the AI (e.g., "You are a world-class chef"). This constrains the AI\'s tone, style, and knowledge base to be consistent with that role.',
+            useCase: 'Excellent for generating content with a specific voice, brainstorming creative ideas from a certain perspective, or for educational simulations.',
+            limitations: 'Effectiveness depends on the AI\'s training data related to that role.',
+            example: 'Prompt: "You are a cynical, 1940s film noir detective. Describe the city at night."',
+            aiPromptTemplate: (text) => {
+                const roles = ["poet", "scientist", "comedian", "historian"];
+                const randomRole = roles[Math.floor(Math.random() * roles.length)];
+                return `You are a helpful and creative assistant. Respond to the following as if you were a ${randomRole}: "${text}"`;
+            }
+        }
+    };
+
+    const pitfallsData = [
+        {
+            title: "Being Too Vague",
+            problem: "Prompts like 'Tell me about AI' are too open-ended, leading to generic and unhelpful responses because the AI doesn't know what you specifically want.",
+            solution: "Be specific and descriptive. Clearly state your desired context, outcome, length, and format.",
+            exampleBefore: "Write an article about space.",
+            exampleAfter: "Write a 500-word article for a high-school audience explaining the importance of the James Webb Space Telescope."
+        },
+        {
+            title: "Overloading a Single Prompt",
+            problem: "Asking the AI to perform multiple, unrelated tasks in one prompt confuses the model and often results in shallow or disjointed outputs.",
+            solution: "Break complex requests into a series of smaller, simpler, and more focused prompts.",
+            exampleBefore: "Summarize the attached report, extract key statistics into a table, and then write an email to the team about the findings.",
+            exampleAfter: "Step 1: Summarize the attached report. Step 2: Extract the key statistics from the report into a Markdown table. Step 3: Draft an email..."
+        },
+        {
+            title: "Blindly Trusting AI Output",
+            problem: "AI models can 'hallucinate'—generate plausible but incorrect information. They generate patterns, not verified facts.",
+            solution: "Treat the AI as a creative collaborator, not an infallible expert. Always cross-check important claims, especially statistics, quotes, or advice.",
+            exampleBefore: "What was the a Roaring Fork River flow in 2023?",
+            exampleAfter: "Using the data from the attached USGS report, what was the peak cubic feet per second flow of the Roaring Fork River in 2023?"
+        },
+        {
+            title: "Saying What NOT to Do",
+            problem: "Telling an AI 'Don't do X' can sometimes be less effective than telling it what to do instead, as it may not fully process the negative instruction.",
+            solution: "Focus on positive instructions. Clearly state the desired behavior and provide examples of what you want.",
+            exampleBefore: "Do not include any technical jargon.",
+            exampleAfter: "Explain this concept in simple terms that a 10-year-old could understand."
+        }
+    ];
+
+    const evaluationMetricsData = {
+        Relevance: {
+            description: "Measures how closely the AI's response aligns with the user's query and intent. It answers the question: Is the output on-topic?",
+            method: "Measured with semantic similarity scores or manual human assessment.",
+            target: 85,
+            label: 'Semantic Similarity Target (%)'
+        },
+        Accuracy: {
+            description: "Verifies the factual correctness of the information provided by the AI. It answers the question: Is the output true?",
+            method: "Evaluated using fact-checking tools, expert review, or metrics like F1 scores against a trusted source.",
+            target: 95,
+            label: 'Factual Correctness Target (%)'
+        },
+        Coherence: {
+            description: "Assesses the logical flow and internal consistency of the response. It answers the question: Does the output make sense and read smoothly?",
+            method: "Primarily a qualitative metric judged by human reviewers on a rating scale.",
+            target: 80,
+            label: 'Human Rating (4+ on 5-point scale) Target (%)'
+        },
+        'Format Adherence': {
+            description: "Verifies that the output strictly follows the specified format (e.g., JSON, Markdown table, bulleted list).",
+            method: "Checked using automated tools like regular expressions or syntax validators.",
+            target: 98,
+            label: 'Format Adherence Target (%)'
+        },
+        'Bias & Toxicity': {
+            description: "Detects the presence of demographic bias, stereotypes, or harmful/offensive content in the output.",
+            method: "Measured using automated bias detection tools and systematic expert review.",
+            target: 5,
+            label: 'Max Allowed Bias/Toxicity (%)'
+        }
+    };
+    
+    const techniqueButtons = document.getElementById('technique-buttons');
+    const techniqueDisplay = document.getElementById('technique-display');
+    const tempSlider = document.getElementById('temp-slider');
+    const tempExplanation = document.getElementById('temp-explanation');
+    const pitfallsContainer = document.getElementById('pitfalls-container');
+    const metricSelector = document.getElementById('metric-selector');
+    const metricExplanation = document.getElementById('metric-explanation');
+    const mobileNav = document.getElementById('mobile-nav');
+
+    // LLM Integration Elements
+    const aiInputText = document.getElementById('ai-input-text');
+    const generateAiOutputBtn = document.getElementById('generate-ai-output-btn');
+    const aiOutputLoading = document.getElementById('ai-output-loading');
+    const aiOutputDisplay = document.getElementById('ai-output-display');
+    let currentTechnique = 'zero-shot'; // Default selected technique
+
+    const promptIdeaInput = document.getElementById('prompt-idea-input');
+    const generatePromptIdeaBtn = document.getElementById('generate-prompt-idea-btn');
+    const promptIdeaLoading = document.getElementById('prompt-idea-loading');
+    const promptIdeaOutput = document.getElementById('prompt-idea-output');
+
+
+    async function callGeminiAPI(prompt, outputElement, loadingElement) {
+        outputElement.innerHTML = '';
+        loadingElement.classList.remove('hidden');
+
+        try {
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            const payload = { contents: chatHistory };
+            const apiKey = ""; // Canvas will provide this at runtime
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (result.candidates && result.candidates.length > 0 &&
+                result.candidates[0].content && result.candidates[0].content.parts &&
+                result.candidates[0].content.parts.length > 0) {
+                const text = result.candidates[0].content.parts[0].text;
+                outputElement.innerText = text;
+            } else {
+                outputElement.innerText = 'Error: Could not get a valid response from the AI. Please try again.';
+                console.error('Unexpected API response structure:', result);
+            }
+        } catch (error) {
+            outputElement.innerText = `Error: Failed to connect to the AI. ${error.message}`;
+            console.error('API call failed:', error);
+        } finally {
+            loadingElement.classList.add('hidden');
+        }
+    }
+
+
+    function updateTechniqueDisplay(techniqueKey) {
+        const data = techniquesData[techniqueKey];
+        if (!data) return;
+
+        currentTechnique = techniqueKey; // Update current technique
+
+        techniqueDisplay.innerHTML = `
+            <h3 class="text-2xl font-bold mb-4 text-[#D4A373]">${data.title}</h3>
+            <p class="mb-4 text-gray-700">${data.description}</p>
+            <div class="mb-4">
+                <h4 class="font-semibold text-gray-800">Best Use Case:</h4>
+                <p class="text-gray-600">${data.useCase}</p>
+            </div>
+             <div class="mb-6">
+                <h4 class="font-semibold text-gray-800">Limitations:</h4>
+                <p class="text-gray-600">${data.limitations}</p>
+            </div>
+            <div>
+                <h4 class="font-semibold text-gray-800">Example:</h4>
+                <code class="block text-sm bg-gray-100 p-4 rounded-md mt-2 text-gray-800">${data.example}</code>
+            </div>
+        `;
+
+        document.querySelectorAll('#technique-buttons button').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.technique === techniqueKey);
+        });
+        aiOutputDisplay.innerHTML = ''; // Clear previous AI output
+        aiInputText.value = ''; // Clear previous user input
+    }
+    
+    techniqueButtons.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON') {
+            updateTechniqueDisplay(e.target.dataset.technique);
+        }
+    });
+
+    generateAiOutputBtn.addEventListener('click', async () => {
+        const userText = aiInputText.value.trim();
+        if (!userText) {
+            aiOutputDisplay.innerText = 'Please enter some text to process.';
+            return;
+        }
+
+        const promptTemplate = techniquesData[currentTechnique].aiPromptTemplate;
+        const prompt = promptTemplate(userText);
+
+        await callGeminiAPI(prompt, aiOutputDisplay, aiOutputLoading);
+    });
+
+    generatePromptIdeaBtn.addEventListener('click', async () => {
+        const topic = promptIdeaInput.value.trim();
+        if (!topic) {
+            promptIdeaOutput.innerText = 'Please enter a topic to generate a prompt idea.';
+            return;
+        }
+        const prompt = `Generate a creative and specific prompt idea for a Large Language Model related to the topic: "${topic}". The prompt should be ready to use.`;
+        await callGeminiAPI(prompt, promptIdeaOutput, promptIdeaLoading);
+    });
+
+
+    function updateTempExplanation() {
+        const value = parseFloat(tempSlider.value);
+        let explanationText = '';
+        if (value <= 0.3) {
+            explanationText = `<strong>Temperature: ${value}</strong>. At this low level, the model is highly deterministic. It will almost always pick the most likely next word. Ideal for factual recall, data extraction, and constrained tasks.`;
+        } else if (value > 0.3 && value <= 0.7) {
+            explanationText = `<strong>Temperature: ${value}</strong>. This is a balanced setting. It allows for some creativity and diversity while maintaining good coherence and focus. A great default for many creative writing or summarization tasks.`;
+        } else {
+            explanationText = `<strong>Temperature: ${value}</strong>. At a high temperature, the model's output is very random. It might discover novel ideas but can also produce nonsensical text. Best for brainstorming or generating abstract poetry.`;
+        }
+        tempExplanation.innerHTML = explanationText;
+    }
+
+    tempSlider.addEventListener('input', updateTempExplanation);
+
+    function createPitfallElements() {
+        pitfallsContainer.innerHTML = '';
+        pitfallsData.forEach(pitfall => {
+            const pitfallEl = document.createElement('div');
+            pitfallEl.className = 'pitfall-card rounded-lg border border-gray-200 overflow-hidden';
+            pitfallEl.innerHTML = `
+                <button class="w-full text-left p-4 flex justify-between items-center bg-white hover:bg-gray-50">
+                    <span class="font-semibold text-lg">${pitfall.title}</span>
+                    <span class="transform transition-transform duration-300 text-[#D4A373] text-2xl font-thin">+</span>
+                </button>
+                <div class="pitfall-content hidden p-6 border-t border-gray-200 bg-gray-50">
+                    <p class="mb-4"><strong class="text-red-600">The Problem:</strong> ${pitfall.problem}</p>
+                    <p class="mb-4"><strong class="text-green-600">The Solution:</strong> ${pitfall.solution}</p>
+                    <h5 class="font-semibold mt-6 mb-2">Example Transformation</h5>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div>
+                            <p class="text-sm font-medium text-red-600">Ineffective Prompt:</p>
+                            <code class="block text-sm bg-red-50 p-3 rounded-md mt-1">${pitfall.exampleBefore}</code>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-green-600">Effective Prompt:</p>
+                             <code class="block text-sm bg-green-50 p-3 rounded-md mt-1">${pitfall.exampleAfter}</code>
+                        </div>
+                    </div>
+                </div>
+            `;
+            pitfallsContainer.appendChild(pitfallEl);
+        });
+
+        document.querySelectorAll('.pitfall-card button').forEach(button => {
+            button.addEventListener('click', () => {
+                const content = button.nextElementSibling;
+                const icon = button.querySelector('span:last-child');
+                content.classList.toggle('hidden');
+                icon.classList.toggle('rotate-45');
+            });
+        });
+    }
+    
+    let metricsChart;
+    function createMetricsChart() {
+        const ctx = document.getElementById('metricsChart').getContext('2d');
+        const initialMetric = Object.keys(evaluationMetricsData)[0];
+        const initialData = evaluationMetricsData[initialMetric];
+
+        metricsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [initialData.label],
+                datasets: [{
+                    label: 'Target Value',
+                    data: [initialData.target],
+                    backgroundColor: ['#D4A373'],
+                    borderColor: ['#b58a59'],
+                    borderWidth: 1,
+                    barPercentage: 0.5
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + "%"
+                            }
+                        }
+                    },
+                    y: {
+                        ticks: {
+                           font: {
+                                size: 10
+                           }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ` Target: ${context.raw}%`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        updateMetricDisplay(initialMetric);
+    }
+    
+    function updateMetricDisplay(metricKey) {
+        const data = evaluationMetricsData[metricKey];
+        if(!data) return;
+
+        metricExplanation.innerHTML = `
+            <h3 class="text-xl font-bold mb-2 text-[#444444]">${metricKey}</h3>
+            <p class="mb-4 text-gray-700">${data.description}</p>
+            <p class="text-sm text-gray-600"><strong class="font-semibold">Measurement Method:</strong> ${data.method}</p>
+        `;
+        
+        if (metricsChart) {
+            metricsChart.data.labels = [data.label];
+            metricsChart.data.datasets[0].data = [data.target];
+             metricsChart.options.scales.x.max = (metricKey === 'Bias & Toxicity') ? Math.ceil(data.target / 5) * 5 + 5 : 100;
+            metricsChart.update();
+        }
+    }
+
+    Object.keys(evaluationMetricsData).forEach(key => {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = key;
+        metricSelector.appendChild(option);
+    });
+
+    metricSelector.addEventListener('change', (e) => {
+        updateMetricDisplay(e.target.value);
+    });
+
+    mobileNav.addEventListener('change', (e) => {
+        const targetId = e.target.value;
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+            targetElement.scrollIntoView({ behavior: 'smooth' });
+        }
+    });
+    
+    function animateStats() {
+        const counters = document.querySelectorAll('.stat-card div[data-target]');
+        counters.forEach(counter => {
+            const target = +counter.dataset.target;
+            let current = 0;
+            const increment = target / 100;
+
+            const updateCounter = () => {
+                if (current < target) {
+                    current += increment;
+                    counter.innerText = Math.ceil(current) + '%';
+                    requestAnimationFrame(updateCounter);
+                } else {
+                    counter.innerText = target + '%';
+                }
+            };
+            updateCounter();
+        });
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateStats();
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.5 });
+    observer.observe(document.querySelector('.stat-card'));
+    
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('section');
+
+    const sectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                navLinks.forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                });
+            }
+        });
+    }, { rootMargin: '-30% 0px -70% 0px' });
+    
+    sections.forEach(section => sectionObserver.observe(section));
+
+
+    updateTechniqueDisplay('zero-shot');
+    updateTempExplanation();
+    createPitfallElements();
+    createMetricsChart();
+});
+</script>
+</body>
+</html>
